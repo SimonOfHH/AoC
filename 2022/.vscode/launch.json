@@ -13,6 +13,9 @@
             "args": [
                 "all"
             ],
+            "env": {
+                "COOKIE": "<cookie-value>"
+            },
             "cwd": "${workspaceFolder}/AdventOfCode",
             "console": "externalTerminal",
             "stopAtEntry": false
