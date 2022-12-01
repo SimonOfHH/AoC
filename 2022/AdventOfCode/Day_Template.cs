@@ -2,8 +2,6 @@ namespace AdventOfCode;
 
 public class Day_XX : BaseDay
 {
-    private readonly string _input;
-
     public Day_XX()
     {
     }

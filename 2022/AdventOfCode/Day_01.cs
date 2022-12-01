@@ -2,7 +2,7 @@
 
 public class Day_01 : BaseDay
 {
-    public bool Sample = true;
+    public bool Sample = false;
     //private readonly string _input;
     private Dictionary<int, int> elfCalories;
 
@@ -11,15 +11,9 @@ public class Day_01 : BaseDay
         elfCalories = ParseInput();
     }
 
-    public override ValueTask<string> Solve_1()
-    {
-        return new(elfCalories.MaxBy(kvp => kvp.Value).Value.ToString());
-    }
+    public override ValueTask<string> Solve_1() => new(elfCalories.MaxBy(kvp => kvp.Value).Value.ToString());
 
-    public override ValueTask<string> Solve_2()
-    {
-        return new ValueTask<string>(elfCalories.OrderByDescending(kvp => kvp.Value).Take(3).Sum(kvp => kvp.Value).ToString());
-    }
+    public override ValueTask<string> Solve_2() => new(elfCalories.OrderByDescending(kvp => kvp.Value).Take(3).Sum(kvp => kvp.Value).ToString());
 
     private Dictionary<int, int> ParseInput()
     {
