@@ -2,12 +2,12 @@
 
 public class Day_01 : BaseDay
 {
-    private readonly string _input;
+    public bool Sample = true;
+    //private readonly string _input;
     private Dictionary<int, int> elfCalories;
 
     public Day_01()
     {
-        _input = File.ReadAllText(InputFilePath);
         elfCalories = ParseInput();
     }
 
@@ -24,7 +24,7 @@ public class Day_01 : BaseDay
     private Dictionary<int, int> ParseInput()
     {
         var values = new Dictionary<int, int>();
-        foreach (var line in File.ReadAllLines(InputFilePath))
+        foreach (var line in this.GetInput(Sample))
         {
             if ((String.IsNullOrEmpty(line)) || (values.Count == 0))
                 values.Add(values.Count + 1, 0);
