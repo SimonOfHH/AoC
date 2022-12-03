@@ -25,9 +25,9 @@ public class Day_03 : BaseDay
     private List<RucksackGroup> GroupRucksacks()
     {
         var group = new List<RucksackGroup>();
-        foreach (var chunk in Rucksacks.ChunkBy(3))
+        foreach (var chunk in Rucksacks.Chunk(3))
         {
-            group.Add(new RucksackGroup(chunk));
+            group.Add(new RucksackGroup(chunk.ToList()));
         }
         return group;
     }
@@ -46,8 +46,8 @@ public class Rucksack
     public Rucksack(string s)
     {
         AllItems = s.ToList();
-        Compartment1 = s.Substring(0, (int)(s.Length / 2)).ToList();
-        Compartment2 = s.Substring((int)(s.Length / 2)).ToList();
+        Compartment1 = AllItems.Chunk(AllItems.Count() / 2).First().ToList();
+        Compartment2 = AllItems.Chunk(AllItems.Count() / 2).Last().ToList();
     }
     private char GetSameItem()
     {

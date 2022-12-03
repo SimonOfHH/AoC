@@ -90,17 +90,6 @@ public static class BaseDayExtension
         return InputHelper.GetSampleInput(int.Parse(baseDay.GetType().Name.Replace("Day_", ""))); // get the currently used day based on the class name
     }
 }
-public static class ListExtensions
-{
-    public static List<List<T>> ChunkBy<T>(this List<T> source, int chunkSize)
-    {
-        return source
-            .Select((x, i) => new { Index = i, Value = x })
-            .GroupBy(x => x.Index / chunkSize)
-            .Select(x => x.Select(v => v.Value).ToList())
-            .ToList();
-    }
-}
 public static class CharExtensions
 {
     public static int PriorityValue(this char c)
