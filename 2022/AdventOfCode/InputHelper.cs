@@ -90,3 +90,31 @@ public static class BaseDayExtension
         return InputHelper.GetSampleInput(int.Parse(baseDay.GetType().Name.Replace("Day_", ""))); // get the currently used day based on the class name
     }
 }
+public static class ListExtensions
+{
+    public static List<List<T>> ChunkBy<T>(this List<T> source, int chunkSize)
+    {
+        return source
+            .Select((x, i) => new { Index = i, Value = x })
+            .GroupBy(x => x.Index / chunkSize)
+            .Select(x => x.Select(v => v.Value).ToList())
+            .ToList();
+    }
+}
+public static class CharExtensions
+{
+    public static int PriorityValue(this char c)
+    {
+        int charValue = 0;
+        if (c == 0)
+            return charValue;
+        // Lowercase item types a through z have priorities 1 through 26.
+        // Uppercase item types A through Z have priorities 27 through 52.
+        if (char.IsLower(c))
+            charValue = c - 96;
+        else
+            charValue = c - 38;
+
+        return charValue;
+    }
+}
