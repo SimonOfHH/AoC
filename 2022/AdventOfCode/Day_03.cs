@@ -51,12 +51,7 @@ public class Rucksack
     }
     private char GetSameItem()
     {
-        foreach (char s in Compartment1)
-        {
-            if (Compartment2.Contains(s))
-                return s;
-        }
-        return new char();
+        return Compartment1.Where(c => Compartment2.Contains(c)).First();
     }
 }
 public class RucksackGroup
@@ -70,7 +65,6 @@ public class RucksackGroup
     {
         get { return GetCommonItem().PriorityValue(); }
     }
-
     public RucksackGroup(List<Rucksack> rucksacks)
     {
         Rucksacks = rucksacks;
