@@ -24,12 +24,7 @@ public class Day_03 : BaseDay
     }
     private List<RucksackGroup> GroupRucksacks()
     {
-        var group = new List<RucksackGroup>();
-        foreach (var chunk in Rucksacks.Chunk(3))
-        {
-            group.Add(new RucksackGroup(chunk.ToList()));
-        }
-        return group;
+        return Rucksacks.Chunk(3).Select(chunk => new RucksackGroup(chunk.ToList())).ToList();
     }
 }
 
