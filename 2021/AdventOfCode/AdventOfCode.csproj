@@ -9,6 +9,8 @@
   <ItemGroup>
     <PackageReference Include="AoCHelper" Version="2.0.0" />
     <PackageReference Include="FileParser" Version="2.1.1" />
+<PackageReference Include="HtmlAgilityPack" Version="1.11.46" />
+
     <PackageReference Include="morelinq" Version="3.3.2" />
     <PackageReference Include="SheepTools" Version="0.11.0" />
   </ItemGroup>
