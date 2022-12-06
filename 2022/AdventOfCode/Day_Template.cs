@@ -5,7 +5,7 @@ public class Day_XX : BaseDay
     private readonly bool Sample = false;
     public Day_XX()
     {
-        var input = ParseInput();
+        //var input = ParseInput();
     }
 
     public override ValueTask<string> Solve_1() => new($"Solution to {ClassPrefix} {CalculateIndex()}, part 1");
