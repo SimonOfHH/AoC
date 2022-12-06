@@ -2,7 +2,7 @@ namespace AdventOfCode;
 
 public class Day_06 : BaseDay
 {
-    private readonly bool Sample = true;
+    private readonly bool Sample = false;
     private readonly DataStream dataStream;
     public Day_06()
     {
@@ -21,7 +21,7 @@ public class Day_06 : BaseDay
 
 public class DataStream
 {
-    public string StreamData { get; }
+    private string StreamData { get; }
     public int StartOfPacket => GetStartOfIndicator(4);
     public int StartOfMessage => GetStartOfIndicator(14);
     public DataStream(string s)
@@ -30,11 +30,9 @@ public class DataStream
     }
     private int GetStartOfIndicator(int length)
     {
-        for (int i = 0; i < StreamData.Length; i++)
-        {
-            if (StreamData.Skip(i).Take(length).Distinct().Count() == length)
-                return i + length;
-        }
-        return 0;
+        return StreamData.Select((c, index) => new { c, index })
+                        .Where(x => StreamData.Substring(x.index, length).Distinct().Count() == length)
+                        .Select(x => x.index + length)
+                        .FirstOrDefault();
     }
 }
