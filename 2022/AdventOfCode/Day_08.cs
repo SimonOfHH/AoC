@@ -44,10 +44,10 @@ public class Grid
     {
         foreach (var tree in Trees)
         {
-            tree.Neighbours.Add(Direction.Left, GetTrees(tree.X, tree.Y, Direction.Left));
-            tree.Neighbours.Add(Direction.Right, GetTrees(tree.X, tree.Y, Direction.Right));
-            tree.Neighbours.Add(Direction.Top, GetTrees(tree.X, tree.Y, Direction.Top));
-            tree.Neighbours.Add(Direction.Below, GetTrees(tree.X, tree.Y, Direction.Below));
+            tree.Neighbours.Add(Direction.Left, GetTrees(tree.Y, tree.X, Direction.Left));
+            tree.Neighbours.Add(Direction.Right, GetTrees(tree.Y, tree.X, Direction.Right));
+            tree.Neighbours.Add(Direction.Top, GetTrees(tree.Y, tree.X, Direction.Top));
+            tree.Neighbours.Add(Direction.Below, GetTrees(tree.Y, tree.X, Direction.Below));
             tree.Visible = tree.IsVisible();
             tree.ScenicScore = tree.GetScenicScore();
         }
@@ -56,10 +56,10 @@ public class Grid
     {
         switch (direction)
         {
-            case Direction.Left: return Trees.Where(tree => tree.X == row && tree.Y < column).ToList();
-            case Direction.Right: return Trees.Where(tree => tree.X == row && tree.Y > column).ToList();
-            case Direction.Top: return Trees.Where(tree => tree.X < row && tree.Y == column).ToList();
-            case Direction.Below: return Trees.Where(tree => tree.X > row && tree.Y == column).ToList();
+            case Direction.Left: return Trees.Where(tree => tree.Y == row && tree.X < column).ToList();
+            case Direction.Right: return Trees.Where(tree => tree.Y == row && tree.X > column).ToList();
+            case Direction.Top: return Trees.Where(tree => tree.Y < row && tree.X == column).ToList();
+            case Direction.Below: return Trees.Where(tree => tree.Y > row && tree.X == column).ToList();
             default:
                 return null;
         }
@@ -73,7 +73,7 @@ public class Tree
     public bool Visible { get; set; }
     public int ScenicScore { get; set; }
     public Dictionary<Direction, List<Tree>> Neighbours { get; set; }
-    public Tree(int x, int y, int value)
+    public Tree(int y, int x, int value)
     {
         X = x;
         Y = y;
@@ -108,16 +108,16 @@ public class Tree
     }
     public int GetScenicScore()
     {
-        int left = Neighbours[Direction.Left].OrderByDescending(tree => tree.Y).TakeUntil(x => x.Value >= Value).Count();
-        int right = Neighbours[Direction.Right].OrderBy(tree => tree.Y).TakeUntil(x => x.Value >= Value).Count();
-        int top = Neighbours[Direction.Top].OrderByDescending(tree => tree.X).TakeUntil(x => x.Value >= Value).Count();
-        int below = Neighbours[Direction.Below].OrderBy(tree => tree.X).TakeUntil(x => x.Value >= Value).Count();
+        int left = Neighbours[Direction.Left].OrderByDescending(tree => tree.X).TakeUntil(x => x.Value >= Value).Count();
+        int right = Neighbours[Direction.Right].OrderBy(tree => tree.X).TakeUntil(x => x.Value >= Value).Count();
+        int top = Neighbours[Direction.Top].OrderByDescending(tree => tree.Y).TakeUntil(x => x.Value >= Value).Count();
+        int below = Neighbours[Direction.Below].OrderBy(tree => tree.Y).TakeUntil(x => x.Value >= Value).Count();
         return left * right * top * below;
 
     }
     public override string ToString()
     {
-        return String.Format("X={0},Y={1} ({2}) (Scenic: {3})", X, Y, Value, ScenicScore);
+        return String.Format("X={0},Y={1} ({2}) (Scenic: {3})", Y, X, Value, ScenicScore);
     }
 }
 public enum Direction
