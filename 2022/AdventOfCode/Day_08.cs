@@ -18,44 +18,59 @@ public class Day_08 : BaseDay
 
     private Grid ParseInput()
     {
-        return new Grid(this.GetInput(Sample).Where(x => !String.IsNullOrEmpty(x)).ToArray());
+        return new Grid(this.GetInput(Sample));
     }
 }
 
 public class Grid
 {
-    public List<Tree> Trees { get; set; }
-    public List<Tree> VisibleTrees => Trees.Where(tree => tree.Visible).ToList();
-    public List<Tree> HiddenTrees => Trees.Where(tree => !tree.Visible).ToList();
-    public List<Tree> ScenicTrees => Trees.OrderByDescending(tree => tree.ScenicScore).ToList();
+    public Tree[,] TreesArray { get; set; }
+    public List<Tree> VisibleTrees => TreesArray.Flatten().Cast<Tree>().Where(tree => tree.Visible).ToList();
+    public List<Tree> HiddenTrees => TreesArray.Flatten().Cast<Tree>().Where(tree => !tree.Visible).ToList();
+    public List<Tree> ScenicTrees => TreesArray.Flatten().Cast<Tree>().OrderByDescending(tree => tree.ScenicScore).ToList();
     public Grid(string[] input)
     {
-        Trees = new List<Tree>();
+        TreesArray = new Tree[input.Length, input[0].Length];
         for (int i = 0; i < input.Length; i++)
         {
             for (int i2 = 0; i2 < input[i].Length; i2++)
-                Trees.Add(new Tree(i, i2, int.Parse(input[i][i2].ToString())));
+                TreesArray[i, i2] = new Tree(i, i2, int.Parse(input[i][i2].ToString()));
         }
-        UpdateTrees();
+        UpdateTreesArray();
     }
-    private void UpdateTrees()
+    private void UpdateTreesArray()
     {
-        foreach (var tree in Trees)
+        for (int i = 0; i < TreesArray.GetLength(0); i++)
         {
-            foreach (Direction direction in Enum.GetValues(typeof(Direction)))
-                tree.Neighbours.Add(direction, GetTrees(tree.Y, tree.X, direction));
-            tree.Visible = tree.IsVisible();
-            tree.ScenicScore = tree.GetScenicScore();
+            for (int i2 = 0; i2 < TreesArray.GetLength(1); i2++)
+            {
+                foreach (Direction direction in Enum.GetValues(typeof(Direction)))
+                    TreesArray[i, i2].Neighbours[direction] = GetNeighbourTrees(TreesArray[i, i2], direction);
+                TreesArray[i, i2].UpdateValues();
+            }
         }
     }
-    private List<Tree> GetTrees(int row, int column, Direction direction)
+    private List<Tree> GetNeighbourTrees(Tree sourceTree, Direction direction)
     {
+        var list = new List<Tree>();
         switch (direction)
         {
-            case Direction.Left: return Trees.Where(tree => tree.Y == row && tree.X < column).ToList();
-            case Direction.Right: return Trees.Where(tree => tree.Y == row && tree.X > column).ToList();
-            case Direction.Top: return Trees.Where(tree => tree.Y < row && tree.X == column).ToList();
-            case Direction.Below: return Trees.Where(tree => tree.Y > row && tree.X == column).ToList();
+            case Direction.Left:
+                for (int i = sourceTree.X - 1; i >= 0; i--)
+                    list.Add(TreesArray[sourceTree.Y, i]);
+                return list;
+            case Direction.Right:
+                for (int i = sourceTree.X + 1; i < TreesArray.GetLength(1); i++)
+                    list.Add(TreesArray[sourceTree.Y, i]);
+                return list;
+            case Direction.Top:
+                for (int i = sourceTree.Y - 1; i >= 0; i--)
+                    list.Add(TreesArray[i, sourceTree.X]);
+                return list;
+            case Direction.Below:
+                for (int i = sourceTree.Y + 1; i < TreesArray.GetLength(0); i++)
+                    list.Add(TreesArray[i, sourceTree.X]);
+                return list;
             default:
                 return null;
         }
@@ -75,6 +90,13 @@ public class Tree
         Y = y;
         Value = value;
         Neighbours = new Dictionary<Direction, List<Tree>>();
+        foreach (Direction direction in Enum.GetValues(typeof(Direction)))
+            Neighbours.Add(direction, new List<Tree>());
+    }
+    public void UpdateValues()
+    {
+        Visible = IsVisible();
+        ScenicScore = GetScenicScore();
     }
     public bool IsVisible()
     {
@@ -92,13 +114,13 @@ public class Tree
     }
     private bool OnEdge()
     {
-        if (Neighbours[Direction.Left].Count == 0)
+        if (Neighbours[Direction.Left]?.Count == 0)
             return true;
-        if (Neighbours[Direction.Right].Count == 0)
+        if (Neighbours[Direction.Right]?.Count == 0)
             return true;
-        if (Neighbours[Direction.Top].Count == 0)
+        if (Neighbours[Direction.Top]?.Count == 0)
             return true;
-        if (Neighbours[Direction.Below].Count == 0)
+        if (Neighbours[Direction.Below]?.Count == 0)
             return true;
         return false;
     }
