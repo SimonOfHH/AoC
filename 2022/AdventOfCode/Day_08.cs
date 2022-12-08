@@ -34,9 +34,7 @@ public class Grid
         for (int i = 0; i < input.Length; i++)
         {
             for (int i2 = 0; i2 < input[i].Length; i2++)
-            {
                 Trees.Add(new Tree(i, i2, int.Parse(input[i][i2].ToString())));
-            }
         }
         UpdateTrees();
     }
@@ -44,10 +42,8 @@ public class Grid
     {
         foreach (var tree in Trees)
         {
-            tree.Neighbours.Add(Direction.Left, GetTrees(tree.Y, tree.X, Direction.Left));
-            tree.Neighbours.Add(Direction.Right, GetTrees(tree.Y, tree.X, Direction.Right));
-            tree.Neighbours.Add(Direction.Top, GetTrees(tree.Y, tree.X, Direction.Top));
-            tree.Neighbours.Add(Direction.Below, GetTrees(tree.Y, tree.X, Direction.Below));
+            foreach (Direction direction in Enum.GetValues(typeof(Direction)))
+                tree.Neighbours.Add(direction, GetTrees(tree.Y, tree.X, direction));
             tree.Visible = tree.IsVisible();
             tree.ScenicScore = tree.GetScenicScore();
         }
