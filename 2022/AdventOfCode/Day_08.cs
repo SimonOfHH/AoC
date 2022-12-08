@@ -25,9 +25,10 @@ public class Day_08 : BaseDay
 public class Grid
 {
     public Tree[,] TreesArray { get; set; }
-    public List<Tree> VisibleTrees => TreesArray.Flatten().Cast<Tree>().Where(tree => tree.Visible).ToList();
-    public List<Tree> HiddenTrees => TreesArray.Flatten().Cast<Tree>().Where(tree => !tree.Visible).ToList();
-    public List<Tree> ScenicTrees => TreesArray.Flatten().Cast<Tree>().OrderByDescending(tree => tree.ScenicScore).ToList();
+    public List<Tree> FlattenedArray { get; set; }
+    public List<Tree> VisibleTrees => FlattenedArray.Where(tree => tree.Visible).ToList();
+    public List<Tree> HiddenTrees => FlattenedArray.Where(tree => !tree.Visible).ToList();
+    public List<Tree> ScenicTrees => FlattenedArray.OrderByDescending(tree => tree.ScenicScore).ToList();
     public Grid(string[] input)
     {
         TreesArray = new Tree[input.Length, input[0].Length];
@@ -37,6 +38,7 @@ public class Grid
                 TreesArray[i, i2] = new Tree(i, i2, int.Parse(input[i][i2].ToString()));
         }
         UpdateTreesArray();
+        FlattenedArray = TreesArray.Flatten().Cast<Tree>().ToList();
     }
     private void UpdateTreesArray()
     {
