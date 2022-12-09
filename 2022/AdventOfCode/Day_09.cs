@@ -9,7 +9,7 @@ public class Day_09 : BaseDay
         map = ParseInput();
     }
 
-    public override ValueTask<string> Solve_1() => new(map.PathTail.Count.ToString());
+    public override ValueTask<string> Solve_1() => new(map.PathTailDistinct.Count.ToString());
 
     public override ValueTask<string> Solve_2() => new($"Solution to {ClassPrefix} {CalculateIndex()}, part 2");
 
@@ -18,19 +18,16 @@ public class Day_09 : BaseDay
         return new Map(this.GetInput(Sample));
     }
 }
-public class Map
+class Map
 {
     public List<MapInstruction> Instructions { get; set; }
-    public Dictionary<Point, int> PathHead { get; set; }
-    public Dictionary<Point, int> PathTail { get; set; }
+    public List<Point> PathTailDistinct => PathTailComplete.Distinct(new PointEqualityComparer()).ToList();
     public List<Point> PathHeadComplete { get; set; }
     public List<Point> PathTailComplete { get; set; }
     public Point LastHead { get; set; }
     public Point LastTail { get; set; }
     public Map(string[] input)
     {
-        PathHead = new Dictionary<Point, int>();
-        PathTail = new Dictionary<Point, int>();
         PathHeadComplete = new List<Point>();
         PathTailComplete = new List<Point>();
 
@@ -46,48 +43,20 @@ public class Map
     {
         var currPointHead = LastHead;
         var currPointTail = LastTail;
-        switch (instruction.Direction)
+        for (int i = 0; i < instruction.Steps; i++)
         {
-            case Direction.Left:
-                for (int i = 0; i < instruction.Steps; i++)
-                {
-                    currPointHead.X--;
-                    UpdatePathHead(currPointHead.X, currPointHead.Y);
-                    if (!IsTailNextToHead(currPointHead, currPointTail, true))
-                        currPointTail = MoveTail(currPointHead, currPointTail, instruction.Direction);
-                }
-                break;
-            case Direction.Right:
-                for (int i = 0; i < instruction.Steps; i++)
-                {
-                    currPointHead.X++;
-                    UpdatePathHead(currPointHead.X, currPointHead.Y);
-                    if (!IsTailNextToHead(currPointHead, currPointTail, true))
-                        currPointTail = MoveTail(currPointHead, currPointTail, instruction.Direction);
-                }
-                break;
-            case Direction.Top:
-                for (int i = 0; i < instruction.Steps; i++)
-                {
-                    currPointHead.Y++;
-                    UpdatePathHead(currPointHead.X, currPointHead.Y);
-                    if (!IsTailNextToHead(currPointHead, currPointTail, true))
-                        currPointTail = MoveTail(currPointHead, currPointTail, instruction.Direction);
-                }
-                break;
-            case Direction.Below:
-                for (int i = 0; i < instruction.Steps; i++)
-                {
-                    currPointHead.Y--;
-                    UpdatePathHead(currPointHead.X, currPointHead.Y);
-                    if (!IsTailNextToHead(currPointHead, currPointTail, true))
-                        currPointTail = MoveTail(currPointHead, currPointTail, instruction.Direction);
-                }
-                break;
+            currPointHead.Move(instruction.Direction);
+            UpdatePathHead(currPointHead.X, currPointHead.Y);
+            if (!currPointHead.NextToPoint(currPointTail, true))
+            {
+                currPointTail.Move(currPointHead, instruction.Direction);
+                UpdatePathTail(currPointTail.X, currPointTail.Y);
+            }
         }
         LastHead = new Point(currPointHead.X, currPointHead.Y);
         LastTail = new Point(currPointTail.X, currPointTail.Y);
     }
+    /*
     private bool IsTailNextToHead(Point head, Point tail, bool checkSamePosition)
     {
         if (checkSamePosition)
@@ -103,6 +72,7 @@ public class Map
             if ((head.X - 1 == tail.X) || (head.X + 1 == tail.X))
                 return true;
         }
+        // Check for diagonal position
         if ((head.X - 1 == tail.X) && ((head.Y - 1 == tail.Y) || (head.Y - 1 == tail.Y)))
             return true;
         if ((head.X + 1 == tail.X) && ((head.Y - 1 == tail.Y) || (head.Y + 1 == tail.Y)))
@@ -113,9 +83,11 @@ public class Map
             return true;
         return false;
     }
-    private Point MoveTail(Point head, Point tail, Direction parentDirection)
+    */
+    /*
+    private Point MoveTail(Point head, Point tail, MoveDirection parentDirection)
     {
-        if (parentDirection == Direction.Right)
+        if (parentDirection == MoveDirection.Right)
         {
             if (head.Y != tail.Y)
             {
@@ -141,7 +113,7 @@ public class Map
                 return tail;
             }
         }
-        if (parentDirection == Direction.Left)
+        if (parentDirection == MoveDirection.Left)
         {
             if (head.Y != tail.Y)
             {
@@ -167,7 +139,7 @@ public class Map
                 return tail;
             }
         }
-        if (parentDirection == Direction.Top)
+        if (parentDirection == MoveDirection.Top)
         {
             if (head.X != tail.X)
             {
@@ -193,7 +165,7 @@ public class Map
                 return tail;
             }
         }
-        if (parentDirection == Direction.Below)
+        if (parentDirection == MoveDirection.Below)
         {
             if (head.X != tail.X)
             {
@@ -219,90 +191,39 @@ public class Map
                 return tail;
             }
         }
-        /*
-        if (IsTailNextToHead(head, new Point(tail.X + 1, tail.Y + 1), false))
-        {
-            tail.X++;
-            tail.Y++;
-            UpdatePathTail(tail.X, tail.Y);
-            return tail;
-        }
-        if (IsTailNextToHead(head, new Point(tail.X - 1, tail.Y + 1), false))
-        {
-            tail.X--;
-            tail.Y++;
-            UpdatePathTail(tail.X, tail.Y);
-            return tail;
-        }
-        if (IsTailNextToHead(head, new Point(tail.X + 1, tail.Y - 1), false))
-        {
-            tail.X++;
-            tail.Y--;
-            UpdatePathTail(tail.X, tail.Y);
-            return tail;
-        }
-        if (IsTailNextToHead(head, new Point(tail.X - 1, tail.Y - 1), false))
-        {
-            tail.X--;
-            tail.Y--;
-            UpdatePathTail(tail.X, tail.Y);
-            return tail;
-        }
-        if (IsTailNextToHead(head, new Point(tail.X, tail.Y + 1), false))
-        {
-            tail.Y++;
-            UpdatePathTail(tail.X, tail.Y);
-            return tail;
-        }
-        if (IsTailNextToHead(head, new Point(tail.X, tail.Y - 1), false))
-        {
-            tail.Y--;
-            UpdatePathTail(tail.X, tail.Y);
-            return tail;
-        }
-        */
         return null;
     }
+    */
     private void UpdatePathHead(int x, int y)
     {
         var point = new Point(x, y);
         PathHeadComplete.Add(point);
-        var existingPoint = PathHead.FirstOrDefault(p => p.Key.X == x && p.Key.Y == y).Key;
-        if (PathHead.ContainsKey(point))
-            PathHead[point]++;
-        else
-            PathHead.Add(point, 1);
         LastHead = new Point(x, y);
     }
     private void UpdatePathTail(int x, int y)
     {
         var point = new Point(x, y);
         PathTailComplete.Add(point);
-        var existingPoint = PathTail.FirstOrDefault(p => p.Key.X == x && p.Key.Y == y).Key;
-        if (existingPoint != null)
-            PathTail[existingPoint]++;
-        else
-            PathTail.Add(point, 1);
         LastTail = new Point(x, y);
     }
 }
-public class MapInstruction
+class MapInstruction
 {
-    public Direction Direction { get; set; }
+    public MoveDirection Direction { get; set; }
     public int Steps { get; set; }
     public MapInstruction(string s)
     {
         Direction = GetDirectionFromShortString(s.Split(" ")[0].Trim());
         Steps = int.Parse(s.Split(" ")[1].Trim());
     }
-    private Direction GetDirectionFromShortString(string s)
+    private static MoveDirection GetDirectionFromShortString(string s)
     {
         switch (s)
         {
-            case "L": return Direction.Left;
-            case "R": return Direction.Right;
-            case "U": return Direction.Top;
-            case "D": return Direction.Below;
+            case "L": return MoveDirection.Left;
+            case "R": return MoveDirection.Right;
+            case "U": return MoveDirection.Top;
+            case "D": return MoveDirection.Below;
             default: throw new Exception("Wrong type");
         }
     }
@@ -311,7 +232,7 @@ public class MapInstruction
         return String.Format("{0} {1}", Direction, Steps);
     }
 }
-public class Point
+class Point
 {
     public int X { get; set; }
     public int Y { get; set; }
@@ -320,8 +241,168 @@ public class Point
         X = x;
         Y = y;
     }
+
+    public bool NextToPoint(Point point, bool checkSamePosition)
+    {
+        if (checkSamePosition)
+            if ((point.X == this.X) && (point.Y == this.Y)) // Same Position
+                return true;
+        if (point.X == this.X) // same row
+        {
+            if ((point.Y - 1 == this.Y) || (point.Y + 1 == this.Y))
+                return true;
+        }
+        if (point.Y == this.Y) // same column
+        {
+            if ((point.X - 1 == this.X) || (point.X + 1 == this.X))
+                return true;
+        }
+        // Check for diagonal position
+        if ((point.X - 1 == this.X) && ((point.Y - 1 == this.Y) || (point.Y - 1 == this.Y)))
+            return true;
+        if ((point.X + 1 == this.X) && ((point.Y - 1 == this.Y) || (point.Y + 1 == this.Y)))
+            return true;
+        if ((point.Y + 1 == this.Y) && ((point.X - 1 == this.X) || (point.X - 1 == this.X)))
+            return true;
+        if ((point.Y - 1 == this.Y) && ((point.X - 1 == this.X) || (point.X + 1 == this.X)))
+            return true;
+        return false;
+    }
+    public void Move(MoveDirection direction)
+    {
+        if (direction == MoveDirection.Left)
+            X--;
+        if (direction == MoveDirection.Right)
+            X++;
+        if (direction == MoveDirection.Top)
+            Y++;
+        if (direction == MoveDirection.Below)
+            Y--;
+    }
+    public void Move(Point head, MoveDirection parentDirection)
+    {
+        if (parentDirection == MoveDirection.Right)
+        {
+            if (head.Y != Y)
+            {
+                if (head.NextToPoint(new Point(X + 1, Y - 1), false))
+                {
+                    X++;
+                    Y--;
+                    return;
+                }
+                if (head.NextToPoint(new Point(X + 1, Y + 1), false))
+                {
+                    X++;
+                    Y++;
+                    return;
+                }
+            }
+            if (head.NextToPoint(new Point(X + 1, Y), false))
+            {
+                X++;
+                return;
+            }
+        }
+        if (parentDirection == MoveDirection.Left)
+        {
+            if (head.Y != Y)
+            {
+                if (head.NextToPoint(new Point(X - 1, Y - 1), false))
+                {
+                    X--;
+                    Y--;
+                    return;
+                }
+                if (head.NextToPoint(new Point(X - 1, Y + 1), false))
+                {
+                    X--;
+                    Y++;
+                    return;
+                }
+            }
+            if (head.NextToPoint(new Point(X - 1, Y), false))
+            {
+                X--;
+                return;
+            }
+        }
+        if (parentDirection == MoveDirection.Top)
+        {
+            if (head.X != X)
+            {
+                if (head.NextToPoint(new Point(X + 1, Y + 1), false))
+                {
+                    X++;
+                    Y++;
+                    return;
+                }
+                if (head.NextToPoint(new Point(X - 1, Y + 1), false))
+                {
+                    X--;
+                    Y++;
+                    return;
+                }
+            }
+            if (head.NextToPoint(new Point(this.X, this.Y + 1), false))
+            {
+                Y++;
+                return;
+            }
+        }
+        if (parentDirection == MoveDirection.Below)
+        {
+            if (head.X != this.X)
+            {
+                if (head.NextToPoint(new Point(X + 1, Y - 1), false))
+                {
+                    X++;
+                    Y--;
+                    return;
+                }
+                if (head.NextToPoint(new Point(X - 1, Y - 1), false))
+                {
+                    X--;
+                    Y--;
+                    return;
+                }
+            }
+            if (head.NextToPoint(new Point(X, Y - 1), false))
+            {
+                Y--;
+                return;
+            }
+        }
+    }
     public override string ToString()
     {
         return String.Format("X={0} Y={1}", X, Y);
     }
+}
+class PointEqualityComparer : IEqualityComparer<Point>
+{
+    public bool Equals(Point p1, Point p2)
+    {
+        if (p2 == null && p1 == null)
+            return true;
+        else if (p1 == null || p2 == null)
+            return false;
+        else if (p1.X == p2.X && p1.Y == p2.Y)
+            return true;
+        else
+            return false;
+    }
+
+    public int GetHashCode(Point p)
+    {
+        int hCode = p.X ^ p.Y;
+        return hCode.GetHashCode();
+    }
+}
+enum MoveDirection
+{
+    Left,
+    Right,
+    Top,
+    Below
 }
