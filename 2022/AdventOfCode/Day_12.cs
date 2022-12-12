@@ -15,8 +15,12 @@ public class Day_12 : BaseDay
         return new ValueTask<string>((result.Count - 1).ToString());
     }
 
-    public override ValueTask<string> Solve_2() => new($"Solution to {ClassPrefix} {CalculateIndex()}, part 2");
-
+    public override ValueTask<string> Solve_2()
+    {
+        Map = ParseInput();
+        var result = Map.FindPaths();
+        return new ValueTask<string>(result.Where(l => l.Value.Count > 0).Select(l => l.Value.Count - 1).Min().ToString());
+    }
     private Map ParseInput()
     {
         return new Map(this.GetInput(Sample));
@@ -39,6 +43,13 @@ class Map
     {
         return Graph.AStar(GetActualPointFromList(StartPoint),
                            GetActualPointFromList(EndPoint));
+    }
+
+    public Dictionary<Point, List<Point>> FindPaths()
+    {
+        var paths = new Dictionary<Point, List<Point>>();
+        Points.Where(p => p.Cost == 1).ToList().ForEach(p => paths.Add(p, Graph.AStar(p, GetActualPointFromList(EndPoint))));
+        return paths;
     }
     static (Point, Point) GetStartAndEndpoint(string[] input)
     {
