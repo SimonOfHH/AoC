@@ -74,22 +74,12 @@ class RockMap
     public bool FlowIntoAbyss { get; private set; }
     public RockMapPoint ActiveSand { get; set; }
     public List<RockMapPoint> Sand => GetSandPoints();
-    public List<RockMapPoint> Points { get; set; }
     public PointType[,] PointsArray { get; set; }
-    public PointType[,] PointsArrayRO
-    {
-        get
-        {
-            var array = new PointType[Height + 1, WidthTo + 1];
-            Points.ForEach(p => array[p.Y, p.X] = p.Type);
-            return array;
-        }
-    }
     public void Solve(int left, int top)
     {
         while (!FlowIntoAbyss)
             CycleUntilRest(false, left, top);
-        DrawMap(left, top);
+        DrawMap(left, top, 0);
     }
     public List<RockMapPoint> GetSandPoints()
     {
@@ -106,7 +96,6 @@ class RockMap
     }
     private void Initialize(int fromWidth, int toWidth, int height)
     {
-        Points = new List<RockMapPoint>();
         WidthFrom = fromWidth;
         WidthTo = toWidth;
         Height = height;
@@ -116,7 +105,7 @@ class RockMap
     {
         PointsArray = new PointType[Height + 1, WidthTo + 1];
     }
-    void ResizeArray<T>(ref T[,] original, int newCoNum, int newRoNum)
+    private static void ResizeArray<T>(ref T[,] original, int newCoNum, int newRoNum)
     {
         var newArray = new T[newCoNum, newRoNum];
         int columnCount = original.GetLength(1);
@@ -126,52 +115,24 @@ class RockMap
             Array.Copy(original, co * columnCount, newArray, co * columnCount2, columnCount);
         original = newArray;
     }
-
-    public void EnlargeMapListArray()
+    private void EnlargeMapListArray()
     {
+        WidthFrom = WidthFrom - 2;
+        WidthTo = WidthTo + 2;
+        // Temporary assignment to local var
         PointType[,] array = PointsArray;
-        WidthFrom--;
-        WidthFrom--;
-        WidthTo++;
-        WidthTo++;
         ResizeArray(ref array, Height + 1, WidthTo + 1);
+        PointsArray = array;
         for (int x = WidthFrom - 1; x <= WidthTo; x++)
             if (ArrayPointExists(x, Height))
-                array[Height, x] = PointType.Rock;
-        PointsArray = array;
-    }
-    public List<RockMapPoint> MultiDimensionalArrayToList(PointType[,] array)
-    {
-        var points = new List<RockMapPoint>();
-        for (int y = 0; y <= array.GetLength(0); y++)
-            for (int x = 0; x <= array.GetLength(1); x++)
-                points.Add(new RockMapPoint(x, y, array[y, x]));
-        return points;
+                PointsArray[Height, x] = PointType.Rock;
     }
     public void AddInputData(List<RockMapPath> paths)
     {
-        AddInputDataArray(paths);
-    }
-    public void AddInputDataList(List<RockMapPath> paths)
-    {
-        var watch = Stopwatch.StartNew();
-        paths.ForEach(path => path.Points.ForEach(point => UpdatePoint(point, PointType.Rock)));
-        watch.Stop();
-    }
-    public void AddInputDataArray(List<RockMapPath> paths)
-    {
-        var watch = Stopwatch.StartNew();
         paths.ForEach(path => path.Points.ForEach(point => PointsArray[point.Y, point.X] = PointType.Rock));
-        watch.Stop();
     }
-    private void UpdatePoint(RockMapPoint p) => UpdatePoint(p, p.Type);
-    private void UpdatePoint(RockMapPoint p, PointType type)
-    {
-        var sourcePoint = Points.First(ep => ep.X == p.X && ep.Y == p.Y);
-        sourcePoint.Type = type;
-    }
-    public void DrawMap() => DrawMap(Console.GetCursorPosition().Left, Console.GetCursorPosition().Top);
-    public void DrawMap(int left, int top)
+    public void DrawMap() => DrawMap(Console.GetCursorPosition().Left, Console.GetCursorPosition().Top, 0);
+    public void DrawMap(int left, int top, int sleep)
     {
         Console.SetCursorPosition(left, top);
         var values = new string[Height + 1];
@@ -181,8 +142,10 @@ class RockMap
         string map = string.Join(Environment.NewLine, values);
         Console.WriteLine(map);
         Console.WriteLine("");
+        if (sleep > 0)
+            Thread.Sleep(sleep);
     }
-    public string TypeToString(PointType type)
+    private string TypeToString(PointType type)
     {
         return type switch
         {
@@ -194,23 +157,43 @@ class RockMap
     public void CycleUntilRest() => CycleUntilRest(false, Console.GetCursorPosition().Left, Console.GetCursorPosition().Top);
     public void CycleUntilRest(bool draw, int left, int top)
     {
+        // Check if the current entry point is already sand and exit in this case
+        if (IntoAbyss())
+            return;
+        /*
         if (PointsArray[0, 500] == PointType.Sand)
         {
             FlowIntoAbyss = true;
             return;
         }
+        */
         ActiveSand = AddNewSandPoint();
-        int rounds = 0;
         while (ActiveSand != null)
         {
             Cycle();
             if (draw)
-            {
-                DrawMap(left, top);
-                Thread.Sleep(5);
-            }
-            rounds++;
+                DrawMap(left, top, 5);
         }
+    }
+    private bool IntoAbyss()
+    {
+        if (PointsArray[0, 500] == PointType.Sand)
+        {
+            FlowIntoAbyss = true;
+            return true;
+        }
+        if (Part == 1)
+        {
+            if (ActiveSand != null)
+                if ((ActiveSand.X == WidthFrom) || (ActiveSand.X == WidthTo) || (ActiveSand.Y >= Height - 1))
+                {
+                    FlowIntoAbyss = true;
+                    return true;
+                }
+            // if (ActiveSand.Y >= Height - 1)
+            //     FlowIntoAbyss = true;
+        }
+        return false;
     }
     public void Cycle()
     {
