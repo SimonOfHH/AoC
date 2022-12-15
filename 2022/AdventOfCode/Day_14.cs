@@ -29,12 +29,11 @@ public class Day_14 : BaseDay
         (int minX, int maxX, int maxY) = GetMinMaxValues(input);
         if (part == 2)
         {
-            maxY = maxY + 1;
+            maxY++;
             var line = new RockMapLine(new RockMapPoint(minX, maxY, PointType.Rock), new RockMapPoint(maxX, maxY, PointType.Rock)) { Infinite = true };
             input.Add(new RockMapPath(new List<RockMapLine>() { line }));
         }
-        var map = new RockMap(minX, maxX, maxY);
-        map.Part = part;
+        var map = new RockMap(minX, maxX, maxY) { Part = part };
         map.AddInputData(input);
         return map;
     }
@@ -73,22 +72,25 @@ class RockMap
     private int Height { get; set; }
     public bool FlowIntoAbyss { get; private set; }
     public RockMapPoint ActiveSand { get; set; }
-    public List<RockMapPoint> Sand => GetSandPoints();
     public PointType[,] PointsArray { get; set; }
+    public List<RockMapPoint> Sand
+    {
+        get
+        {
+            var sandPoints = new List<RockMapPoint>();
+            for (int x = WidthFrom; x < WidthTo; x++)
+                for (int y = 0; y < Height; y++)
+                    if (PointsArray[y, x] == PointType.Sand)
+                        sandPoints.Add(new RockMapPoint(x, y));
+            return sandPoints;
+        }
+    }
+    public void Solve() => Solve(Console.GetCursorPosition().Left, Console.GetCursorPosition().Top);
     public void Solve(int left, int top)
     {
         while (!FlowIntoAbyss)
             CycleUntilRest(false, left, top);
         DrawMap(left, top, 0);
-    }
-    public List<RockMapPoint> GetSandPoints()
-    {
-        var sandPoints = new List<RockMapPoint>();
-        for (int x = WidthFrom; x < WidthTo; x++)
-            for (int y = 0; y < Height; y++)
-                if (PointsArray[y, x] == PointType.Sand)
-                    sandPoints.Add(new RockMapPoint(x, y));
-        return sandPoints;
     }
     public RockMap(int fromWidth, int toWidth, int height)
     {
@@ -105,20 +107,10 @@ class RockMap
     {
         PointsArray = new PointType[Height + 1, WidthTo + 1];
     }
-    private static void ResizeArray<T>(ref T[,] original, int newCoNum, int newRoNum)
+    private void ExtendMapArray()
     {
-        var newArray = new T[newCoNum, newRoNum];
-        int columnCount = original.GetLength(1);
-        int columnCount2 = newRoNum;
-        int columns = original.GetUpperBound(0);
-        for (int co = 0; co <= columns; co++)
-            Array.Copy(original, co * columnCount, newArray, co * columnCount2, columnCount);
-        original = newArray;
-    }
-    private void EnlargeMapListArray()
-    {
-        WidthFrom = WidthFrom - 2;
-        WidthTo = WidthTo + 2;
+        WidthFrom -= 2;
+        WidthTo += 2;
         // Temporary assignment to local var
         PointType[,] array = PointsArray;
         ResizeArray(ref array, Height + 1, WidthTo + 1);
@@ -142,17 +134,8 @@ class RockMap
         string map = string.Join(Environment.NewLine, values);
         Console.WriteLine(map);
         Console.WriteLine("");
-        if (sleep > 0)
+        if (sleep > 0) // If we want a kind-of animated drawing output, use a short sleep
             Thread.Sleep(sleep);
-    }
-    private string TypeToString(PointType type)
-    {
-        return type switch
-        {
-            PointType.Rock => "#",
-            PointType.Sand => "o",
-            _ => ".",
-        };
     }
     public void CycleUntilRest() => CycleUntilRest(false, Console.GetCursorPosition().Left, Console.GetCursorPosition().Top);
     public void CycleUntilRest(bool draw, int left, int top)
@@ -190,8 +173,6 @@ class RockMap
                     FlowIntoAbyss = true;
                     return true;
                 }
-            // if (ActiveSand.Y >= Height - 1)
-            //     FlowIntoAbyss = true;
         }
         return false;
     }
@@ -231,7 +212,7 @@ class RockMap
             {
                 if ((ActiveSand.X <= WidthFrom) || (ActiveSand.X >= WidthTo))
                 {
-                    EnlargeMapListArray();
+                    ExtendMapArray();
                     nextMove = GetNextPossibleMove();
                 }
             }
@@ -247,20 +228,16 @@ class RockMap
     {
         PointsArray[from.Y, from.X] = PointType.Air;
         PointsArray[to.Y, to.X] = PointType.Sand;
-        //UpdatePoint(from, PointType.Air);
-        //UpdatePoint(to, PointType.Sand);
         ActiveSand = to;
     }
     private RockMapPoint AddNewSandPoint()
     {
         var p = GetNewSandPoint();
         AddSandToMap(p);
-        //Sand.Add(p);
         return p;
     }
     private void AddSandToMap(RockMapPoint sand)
     {
-        //UpdatePoint(sand);
         PointsArray[sand.Y, sand.X] = sand.Type;
     }
     private static RockMapPoint GetNewSandPoint()
@@ -279,16 +256,6 @@ class RockMap
             if (ArrayPoint(ActiveSand.X + 1, ActiveSand.Y + 1) != PointType.Air) moveDR = false;
 
         return moveDown || moveDL || moveDR;
-        /*
-        (bool moveDown, bool moveDL, bool moveDR) = (true, true, true);
-        if (ActiveSandBelow != null)
-            if (ActiveSandBelow.Type == PointType.Rock) moveDown = false;
-        if (ActiveSandDiagonalLeft != null)
-            if (ActiveSandDiagonalLeft.Type == PointType.Rock) moveDL = false;
-        if (ActiveSandDiagonalRight != null)
-            if (ActiveSandDiagonalRight.Type == PointType.Rock) moveDR = false;
-        return moveDown || moveDL || moveDR;
-        */
     }
     private bool ArrayPointExists(int x, int y)
     {
@@ -313,15 +280,26 @@ class RockMap
             if (ArrayPoint(ActiveSand.X - 1, ActiveSand.Y + 1) == PointType.Air) return new RockMapPoint(ActiveSand.X - 1, ActiveSand.Y + 1); // diagonal-left
         if (ArrayPointExists(ActiveSand.X + 1, ActiveSand.Y + 1))
             if (ArrayPoint(ActiveSand.X + 1, ActiveSand.Y + 1) == PointType.Air) return new RockMapPoint(ActiveSand.X + 1, ActiveSand.Y + 1); // diagonal-right
-        /*
-        if (ActiveSandBelow != null)
-            if (ActiveSandBelow.Type == PointType.Air) return ActiveSandBelow;
-        if (ActiveSandDiagonalLeft != null)
-            if (ActiveSandDiagonalLeft.Type == PointType.Air) return ActiveSandDiagonalLeft;
-        if (ActiveSandDiagonalRight != null)
-            if (ActiveSandDiagonalRight.Type == PointType.Air) return ActiveSandDiagonalRight;
-        */
         return null;
+    }
+    private static string TypeToString(PointType type)
+    {
+        return type switch
+        {
+            PointType.Rock => "#",
+            PointType.Sand => "o",
+            _ => ".",
+        };
+    }
+    private static void ResizeArray<T>(ref T[,] original, int newCoNum, int newRoNum)
+    {
+        var newArray = new T[newCoNum, newRoNum];
+        int columnCount = original.GetLength(1);
+        int columnCount2 = newRoNum;
+        int columns = original.GetUpperBound(0);
+        for (int co = 0; co <= columns; co++)
+            Array.Copy(original, co * columnCount, newArray, co * columnCount2, columnCount);
+        original = newArray;
     }
 }
 class RockMapPath
@@ -390,7 +368,7 @@ class RockMapLine
     }
 }
 [DebuggerDisplay("[{X}, {Y}] ({Type})")]
-class RockMapPoint
+internal class RockMapPoint
 {
     public int X { get; set; }
     public int Y { get; set; }
@@ -409,6 +387,7 @@ class RockMapPoint
         Y = y;
         Type = type;
     }
+    public RockMapPoint Copy() => new(this.X, this.Y, this.Type);
     public override string ToString()
     {
         return Type switch
@@ -418,11 +397,6 @@ class RockMapPoint
             _ => ".",
         };
     }
-    public RockMapPoint Copy()
-    {
-        return new RockMapPoint(this.X, this.Y, this.Type);
-    }
-
     public override bool Equals(object obj)
     {
         return Equals(obj as RockMapPoint);
@@ -430,6 +404,10 @@ class RockMapPoint
     public bool Equals(RockMapPoint other)
     {
         return other.X == this.X && other.Y == this.Y && other.Type == this.Type;
+    }
+    public override int GetHashCode()
+    {
+        return HashCode.Combine(X, Y, Type);
     }
 }
 enum PointType
