@@ -107,7 +107,7 @@ class RockMap
     {
         PointsArray = new PointType[Height + 1, WidthTo + 1];
     }
-    private void ExtendMapArray()
+    private RockMapPoint ExtendMapArrayAndGetNextPossibleMove()
     {
         WidthFrom -= 2;
         WidthTo += 2;
@@ -118,6 +118,7 @@ class RockMap
         for (int x = WidthFrom - 1; x <= WidthTo; x++)
             if (ArrayPointExists(x, Height))
                 PointsArray[Height, x] = PointType.Rock;
+        return GetNextPossibleMove();
     }
     public void AddInputData(List<RockMapPath> paths)
     {
@@ -140,16 +141,8 @@ class RockMap
     public void CycleUntilRest() => CycleUntilRest(false, Console.GetCursorPosition().Left, Console.GetCursorPosition().Top);
     public void CycleUntilRest(bool draw, int left, int top)
     {
-        // Check if the current entry point is already sand and exit in this case
-        if (IntoAbyss())
+        if (IntoAbyss(true))
             return;
-        /*
-        if (PointsArray[0, 500] == PointType.Sand)
-        {
-            FlowIntoAbyss = true;
-            return;
-        }
-        */
         ActiveSand = AddNewSandPoint();
         while (ActiveSand != null)
         {
@@ -158,21 +151,23 @@ class RockMap
                 DrawMap(left, top, 5);
         }
     }
-    private bool IntoAbyss()
+    private bool IntoAbyss(bool setActiveSandNull)
     {
-        if (PointsArray[0, 500] == PointType.Sand)
-        {
-            FlowIntoAbyss = true;
-            return true;
-        }
         if (Part == 1)
         {
             if (ActiveSand != null)
                 if ((ActiveSand.X == WidthFrom) || (ActiveSand.X == WidthTo) || (ActiveSand.Y >= Height - 1))
                 {
                     FlowIntoAbyss = true;
+                    if (setActiveSandNull) ActiveSand = null;
                     return true;
                 }
+        }
+        if (PointsArray[0, 500] == PointType.Sand)
+        {
+            FlowIntoAbyss = true;
+            if (setActiveSandNull) ActiveSand = null;
+            return true;
         }
         return false;
     }
@@ -180,41 +175,29 @@ class RockMap
     {
         if (ActiveSand == null)
         {
-            if (PointsArray[0, 500] == PointType.Sand)
-            {
-                FlowIntoAbyss = true;
+            if (IntoAbyss(false))
                 return;
-            }
             ActiveSand = AddNewSandPoint();
             return;
         }
-        //if ((ActiveSand.X == 500) && (ActiveSand.Y == 0))
-        //    if (ArrayPoint(500, 1) == PointType.Sand)
-        //        FlowIntoAbyss = true;
         if (!ActiveSandCanMove())
         {
-            //if ((ActiveSand.X == 500) && (ActiveSand.Y == 1))
-            //    FlowIntoAbyss = true;
             ActiveSand = null;
             return;
         }
         var nextMove = GetNextPossibleMove();
         if (nextMove == null)
         {
-            if (Part == 1)
+            switch (Part)
             {
-                if ((ActiveSand.X == WidthFrom) || (ActiveSand.X == WidthTo))
-                    FlowIntoAbyss = true;
-                if (ActiveSand.Y >= Height - 1)
-                    FlowIntoAbyss = true;
-            }
-            else
-            {
-                if ((ActiveSand.X <= WidthFrom) || (ActiveSand.X >= WidthTo))
-                {
-                    ExtendMapArray();
-                    nextMove = GetNextPossibleMove();
-                }
+                case 1:
+                    if (IntoAbyss(true))
+                        return;
+                    break;
+                case 2:
+                    if ((ActiveSand.X <= WidthFrom) || (ActiveSand.X >= WidthTo))
+                        nextMove = ExtendMapArrayAndGetNextPossibleMove();
+                    break;
             }
             if (nextMove == null)
             {
